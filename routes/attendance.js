@@ -1,11 +1,16 @@
+
+const auth = require("../middleware/auth");
+
+
 const express = require("express");
 const router = express.Router();
 const Session = require("../models/session");
 const Attendance = require("../models/attendance");
 const getDistance = require("../utils/distance");
 
-router.post("/mark", async (req, res) => {
-  const session = await Session.findOne({ sessionId: req.body.sessionId });
+router.post("/mark", auth, async (req, res) => {
+  const studentId = req.user.userId; // 🔥 from token
+  const { sessionId, lat, lng, deviceId } = req.body;
 
   router.get("/list/:sessionId", async (req, res) => {
   const sessionId = req.params.sessionId;
@@ -52,6 +57,24 @@ router.post("/mark", async (req, res) => {
 
   res.send("Attendance marked");
 });
+
+router.get("/session/:sessionId", auth, async (req, res) => {
+  // Only teacher allowed
+  if (req.user.role !== "teacher") {
+    return res.status(403).send("Access denied");
+  }
+
+  try {
+    const records = await Attendance.find({
+      sessionId: req.params.sessionId
+    }).sort({ timestamp: 1 });
+
+    res.json(records);
+  } catch (err) {
+    res.status(500).send("Failed to fetch attendance");
+  }
+});
+
 
 module.exports = router;
 
