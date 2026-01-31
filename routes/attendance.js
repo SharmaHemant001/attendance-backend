@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Session = require("../models/Session");
-const Attendance = require("../models/Attendance");
+const Attendance = require("../models/attendance");
 const getDistance = require("../utils/distance");
 
 router.post("/mark", async (req, res) => {

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Session = require("../models/Session");
+const Session = require("../models/session");
 
 router.post("/start", async (req, res) => {
   const session = await Session.create({
