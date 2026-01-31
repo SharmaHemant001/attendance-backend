@@ -75,6 +75,34 @@ router.get("/session/:sessionId", auth, async (req, res) => {
   }
 });
 
+router.post("/manual", auth, async (req, res) => {
+  // Only teacher allowed
+  if (req.user.role !== "teacher") {
+    return res.status(403).send("Only teacher can do this");
+  }
+
+  const { sessionId, studentId, reason } = req.body;
+
+  if (!sessionId || !studentId || !reason) {
+    return res.status(400).send("All fields required");
+  }
+
+  const already = await Attendance.findOne({ sessionId, studentId });
+  if (already) {
+    return res.status(400).send("Attendance already marked");
+  }
+
+  await Attendance.create({
+    sessionId,
+    studentId,
+    manual: true,
+    reason,
+    status: "present"
+  });
+
+  res.send("Attendance marked manually");
+});
+
 
 module.exports = router;
 
