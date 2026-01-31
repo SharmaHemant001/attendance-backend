@@ -4,6 +4,8 @@ const Session = require("../models/session");
 
 router.post("/start", async (req, res) => {
   try {
+    console.log("Session start body:", req.body);
+
     const { teacherId, lat, lng } = req.body;
 
     // ✅ Validation
