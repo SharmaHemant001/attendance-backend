@@ -3,28 +3,37 @@ const router = express.Router();
 const Session = require("../models/session");
 
 router.post("/start", async (req, res) => {
-  const session = await Session.create({
-    sessionId: Math.random().toString(36).substring(2),
-    teacherId: req.body.teacherId,
-    teacherLat: req.body.lat,
-    teacherLng: req.body.lng,
-    startTime: new Date(),
-    expiryTime: new Date(Date.now() + 10 * 60 * 1000),
-    active: true
-  });
+  try {
+    const { teacherId, lat, lng } = req.body;
 
-  res.json(session);
+    // ✅ Validation
+    if (!teacherId || lat === undefined || lng === undefined) {
+      return res.status(400).send("Missing required fields");
+    }
+
+    const sessionId = Math.random().toString(36).substring(2, 10);
+
+    const expiryTime = new Date();
+    expiryTime.setMinutes(expiryTime.getMinutes() + 10);
+
+    const session = await Session.create({
+      sessionId,
+      teacherId,
+      teacherLat: lat,
+      teacherLng: lng,
+      expiryTime,
+      active: true
+    });
+
+    res.json({
+      sessionId: session.sessionId,
+      expiryTime: session.expiryTime
+    });
+  } catch (error) {
+    console.error("Session start error:", error);
+    res.status(500).send("Server error while starting session");
+  }
 });
 
 module.exports = router;
 
-router.post("/end", async (req, res) => {
-  const session = await Session.findOne({ sessionId: req.body.sessionId });
-
-  if (!session) return res.status(404).send("Session not found");
-
-  session.active = false;
-  await session.save();
-
-  res.send("Session ended");
-});
