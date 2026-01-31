@@ -1,41 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const Session = require("../models/session");
+const auth = require("../middleware/auth");
 
-router.post("/start", async (req, res) => {
-  try {
-    console.log("Session start body:", req.body);
-
-    const { teacherId, lat, lng } = req.body;
-
-    // ✅ Validation
-    if (!teacherId || lat === undefined || lng === undefined) {
-      return res.status(400).send("Missing required fields");
-    }
-
-    const sessionId = Math.random().toString(36).substring(2, 10);
-
-    const expiryTime = new Date();
-    expiryTime.setMinutes(expiryTime.getMinutes() + 10);
-
-    const session = await Session.create({
-      sessionId,
-      teacherId,
-      teacherLat: lat,
-      teacherLng: lng,
-      expiryTime,
-      active: true
-    });
-
-    res.json({
-      sessionId: session.sessionId,
-      expiryTime: session.expiryTime
-    });
-  } catch (error) {
-    console.error("Session start error:", error);
-    res.status(500).send("Server error while starting session");
+router.post("/start", auth, async (req, res) => {
+  // 1️⃣ ROLE CHECK
+  if (req.user.role !== "teacher") {
+    return res.status(403).send("Access denied");
   }
+
+  // 2️⃣ LOCATION VALIDATION
+  const { lat, lng } = req.body;
+  if (!lat || !lng) {
+    return res.status(400).send("Location required");
+  }
+
+  // 3️⃣ CREATE SESSION
+  const sessionId = Math.random().toString(36).substring(2, 8);
+
+  const session = await Session.create({
+    sessionId,
+    teacherId: req.user.userId, // 🔥 FROM JWT
+    teacherLat: lat,
+    teacherLng: lng,
+    active: true,
+    expiryTime: new Date(Date.now() + 10 * 60 * 1000)
+  });
+
+  res.json({ sessionId });
 });
 
 module.exports = router;
-
