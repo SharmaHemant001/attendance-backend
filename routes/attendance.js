@@ -1,3 +1,5 @@
+const User = require("../models/user");
+
 const express = require("express");
 const router = express.Router();
 
@@ -52,7 +54,7 @@ router.post("/mark", auth, async (req, res) => {
       lng
     );
 
-    if (distance > 30) {
+    if (distance > 100) {
       return res.status(400).send("Out of range");
     }
 

@@ -27,11 +27,10 @@ router.post("/register", async (req, res) => {
       role
     });
 
-    res.status(201).json({
-      message: "User registered successfully"
-    });
+    res.status(201).json({ message: "Account created successfully" });
   } catch (err) {
-    res.status(500).send("Registration failed");
+    console.error(err);
+    res.status(500).json({ message: "Signup failed" });
   }
 });
 
